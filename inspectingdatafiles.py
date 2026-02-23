@@ -41,14 +41,10 @@ def human_interval(seconds: float | None) -> str:
 def inspect_one_file(fp: Path, print_head: bool = False) -> tuple[dict, pd.DataFrame]:
     df = pd.read_parquet(fp)
 
-    # Expected columns from your pipeline:
-    # timestamp, value_num, value_str, value_raw
-    # But we’ll be defensive:
     for col in ["timestamp", "value_num", "value_str", "value_raw"]:
         if col not in df.columns:
             df[col] = pd.NA
 
-    # Ensure timestamp is datetime (your writer likely already did this)
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
 
     n = len(df)
@@ -65,7 +61,6 @@ def inspect_one_file(fp: Path, print_head: bool = False) -> tuple[dict, pd.DataF
     value_num_nonnull = df["value_num"].notna().sum()
     value_num_pct = (value_num_nonnull / n * 100.0) if n else 0.0
 
-    # Non-numeric “states” are usually in value_str when value_num is NaN
     state_counts = (
         df.loc[df["value_num"].isna() & df["value_str"].notna(), "value_str"]
         .astype(str)
@@ -75,7 +70,6 @@ def inspect_one_file(fp: Path, print_head: bool = False) -> tuple[dict, pd.DataF
     )
     state_counts.insert(0, "series", fp.stem)
 
-    # Optional peek
     if print_head:
         print("\n" + "=" * 90)
         print(fp.name)
@@ -113,7 +107,6 @@ def main():
     summaries: list[dict] = []
     all_states: list[pd.DataFrame] = []
 
-    # Print a small peek of the first few files
     for i, fp in enumerate(files):
         summary, states = inspect_one_file(fp, print_head=(i < 3))
         summaries.append(summary)
@@ -124,14 +117,12 @@ def main():
     print(f"\nWrote summary CSV: {SUMMARY_CSV.resolve()}")
 
     states_df = pd.concat(all_states, ignore_index=True)
-    # Keep it manageable: top 10 states per series
     states_df = states_df.sort_values(["series", "count"], ascending=[True, False])
     states_df["rank_in_series"] = states_df.groupby("series").cumcount() + 1
     states_df = states_df[states_df["rank_in_series"] <= 10].drop(columns=["rank_in_series"])
     states_df.to_csv(STATE_COUNTS_CSV, index=False)
     print(f"Wrote value_str state counts CSV: {STATE_COUNTS_CSV.resolve()}")
 
-    # Console-friendly overview
     cols = [
         "series", "rows", "start_utc", "end_utc",
         "median_interval", "value_num_pct", "duplicate_timestamps"
