@@ -267,7 +267,7 @@ def align_predictor_to_nitrate(
 # -----------------------------
 def main():
     # Output
-    OUT_DIR = Path("DATA") / "PROCESSED"
+    OUT_DIR = Path("DATA") / "RAW"
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     NITRATE_TAG = "WP_WC_Nitrate_River"
     out_csv = OUT_DIR / f"{NITRATE_TAG}_hourly_with_covariates_5y.csv"

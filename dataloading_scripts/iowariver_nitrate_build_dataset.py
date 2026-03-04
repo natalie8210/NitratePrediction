@@ -50,7 +50,7 @@ INTERP_MAXCOUNT = 50000  # 1h * 5y ~ 44k
 # alignment behavior: require real predictor points within this distance on both sides
 MAX_BRACKET = pd.Timedelta("3D")
 
-OUT_DIR = Path("DATA") / "PROCESSED"
+OUT_DIR = Path("DATA") / "RAW"
 OUT_CSV = OUT_DIR / f"{TARGET_TAG}_hourly_with_covariates_5y.csv"
 
 
