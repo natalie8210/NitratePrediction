@@ -1,5 +1,16 @@
 # NitratePrediction
 
-loadingdata.py
+1. Clone the repository
+3. Create a Python virtual envioronemt
+4. Install dependencies
+5. Create a .env file in the project root
+   PI_USERNAME=your_username
+   PI_PASSWORD=your_password
+6. Run scripts
 
-to use, create a .env file with PI_USERNAME = "hawkid@uiowa.edu" PI_PASSWORD = "password" 
+Notes
+* time range: last 5 years
+* predictors interpolated with interval of 1 hour
+* predictor values are only filled when nearby data exists (lots of NaN as is)
+  
+
