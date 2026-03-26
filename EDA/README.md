@@ -7,6 +7,18 @@
 
 ---
 
+## Time Series Overview
+ 
+![Image](Plots/01_timeseries_overview.png)
+ 
+### What it shows
+Full 5-year time series of all variables plotted on a shared time axis.
+ 
+### Interpretation
+The nitrate target exhibits large, slow-moving waves, elevated in spring and fall, depressed in summer. The most notable feature is increased volatility from 2025 onward, with larger and more frequent spikes than in 2021–2024. Flow and gauge height variables track closely with each other and show similar seasonal structure to nitrate, consistent with the physical expectation that high-flow events mobilize nitrate from agricultural soils. Precipitation is sparse and episodic as expected. The upstream nitrate sensor (`WP_WC_Nitrate_River`) closely mirrors the Iowa City target in its overall shape but with slightly smoother behavior.
+
+---
+
 ## Data quality decisions made prior to EDA
 
 - Coralville Reservoir USACE Level, Outflow, and Inflow variables were excluded due to >85% missingness
@@ -15,6 +27,7 @@
 - Precipitation was square-root transformed (`PRCP_sqrt`) to reduce extreme skewness prior to correlation analysis
 - All column name whitespace was stripped before analysis
 - `WC_WP_Nitrate_River` was missing 7 observations and they were forward filled.
+- `PRCP` was forward-filled with the same value per hour (one daily measurement) to convert it into hourly from daily. This doesn't change the structure of the data itself.  
 
 ---
 
@@ -32,11 +45,12 @@
 
 ---
 
-##STL Decomposition
+## STL Decomposition
 
-![Image](EDA/Plots/stl_daily.png)
+![Image](Plots/stl_daily.png)
 
-![Image](EDA/Plots/stl_weekly.png)
+![Image](Plots/stl_weekly.png)
+
 ### What it shows
 Seasonal-Trend decomposition using LOESS (STL), separating the nitrate time series into trend, seasonal, and residual components at both 24-hour (daily) and 168-hour (weekly) periods.
 
@@ -55,7 +69,7 @@ The upstream sensor (`WP_WC_Nitrate_River`) produces a cleaner STL decomposition
 
 ## ACF and PACF (Nitrate Target)
 
-![Image](EDA/Plots/05_acf_pacf_nitrate.png)
+![Image](Plots/05_acf_pacf_nitrate.png)
 
 ### What it shows
 Autocorrelation function (ACF) and partial autocorrelation function (PACF) for the Iowa City nitrate target up to 72-hour lags.
@@ -74,7 +88,7 @@ Autocorrelation function (ACF) and partial autocorrelation function (PACF) for t
 
 ## ACF and PACF (All Predictors)
 
-![Image](EDA/Plots/06_acf_pacf_predictors.png)
+![Image](Plots/06_acf_pacf_predictors.png)
 
 ### What it shows
 ACF and PACF plots for each predictor variable, informing how they should be preprocessed before inclusion in model.
@@ -91,9 +105,9 @@ ACF and PACF plots for each predictor variable, informing how they should be pre
 
 ---
 
-## 7. Step 6 — Cross-Correlation Functions (CCF)
+## Cross-Correlation Functions (CCF)
 
-![Image](EDA/Plots/07_ccf.png)
+![Image](Plots/07_ccf.png)
 
 ### What it shows
 Cross-correlation between the nitrate target and each predictor at lags from -72 to +72 hours. Negative lags indicate the predictor leads nitrate (the more useful direction for forecasting).
@@ -108,9 +122,9 @@ Cross-correlation between the nitrate target and each predictor at lags from -72
 
 ---
 
-## 8. Step 7 — Rolling Statistics
+## Rolling Statistics
 
-![Image](EDA/Plots/09_rolling_stats.png)
+![Image](Plots/09_rolling_stats.png)
 
 ### What it shows
 24-hour and 168-hour rolling mean and standard deviation of the nitrate target, plus rolling correlation between the two nitrate sensors.
@@ -127,7 +141,7 @@ Cross-correlation between the nitrate target and each predictor at lags from -72
 
 ## Precipitation Event Analysis
 
-![Image](EDA/Plots/10_prcp_response.png)
+![Image](Plots/10_prcp_response.png)
 
 ### What it shows
 Nitrate time series with top-10% precipitation events marked, and the average nitrate trajectory in the 72 hours following rain events.
@@ -142,42 +156,29 @@ Nitrate time series with top-10% precipitation events marked, and the average ni
 
 ---
 
-## Key Findings Summary
-
-| Finding | Implication |
-|---|---|
-| Nitrate is highly persistent (near-unit-root) | First differencing required; ARIMA(2,1,0) starting point |
-| AR(2) structure in PACF | p=2 for non-seasonal AR order |
-| Seasonality is weak and episodic | Modest seasonal SARIMAX orders; do not over-specify |
-| Regime change in variance post-2025 | Heteroscedasticity; consider log transform of target |
-| Flow/gauge are concurrent correlates, not leading indicators | Include at lag 0–1; de-persist with differencing |
-| WCP_00_TT_091 leads nitrate by ~68 hours | Include at lag 48–72 as a longer-range feature |
-| Precipitation effect is weak and non-linear at hourly resolution | Use rolling sums and interaction terms rather than raw hourly values |
-
----
-
 ## Recommended Feature Engineering
 
 The following features are recommended for the SARIMAX baseline model based on EDA findings:
 
 **Autoregressive features (from PACF)**
-- `nitrate_lag_1` — lag 1 of the target
-- `nitrate_lag_2` — lag 2 of the target
+- `nitrate_lag_1` (IC nitrates) 
+- `nitrate_lag_2`
 
-**Hydrological features (from CCF)**
-- `flow_iowa_city_lag_0` — concurrent flow at Iowa City
-- `flow_iowa_city_lag_1` — 1-hour lagged flow
-- `gauge_iowa_city_lag_0` — concurrent gauge height
-- `dam_flow_lag_0` — concurrent dam outflow
-- `diff_flow_lag_1` — first difference of flow (de-persisted)
+**Water features (from CCF)**
+- `flow_iowa_city_lag_0` 
+- `gauge_iowa_city_lag_0`
+- `dam_flow_lag_0`
+- `dam_gauge_lag_0`
+- `diff_flow_lag_1` — first difference of flow (Either location or both)
 
-**Upstream nitrate (from CCF)**
-- `upstream_nitrate_lag_1` — upstream nitrate at lag 1
-- `upstream_nitrate_lag_2` — upstream nitrate at lag 2
+**WC_WP nitrate (from CCF)**
+- (Only if it makes sense to include the other nitrate sensor as a predictor)
+- `wc_wp_nitrate_lag_1` 
+- `wc_wp_nitrate_lag_2` 
 
-**WCP variable (from CCF)**
-- `wcp_lag_48` — WCP_00_TT_091 at lag 48 hours
-- `wcp_lag_72` — WCP_00_TT_091 at lag 72 hours
+**WCP_TT variable (from CCF)**
+- `wcp_lag_48` 
+- `wcp_lag_72`
 
 **Precipitation features (from CCF and event analysis)**
 - `PRCP_sqrt_lag_24` — sqrt precipitation at lag 24 hours
