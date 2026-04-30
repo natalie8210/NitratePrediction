@@ -153,6 +153,10 @@ if missing_cols:
 forecast_4day = make_arimax_forecast(df_daily)
 print(forecast_4day)
 
+
+
+# ── Write to PI Tags ───────────────────────────────────────────────────────────────────────
+
 from datetime import datetime
 import os
 import pandas as pd
@@ -161,7 +165,6 @@ import requests
 session = requests.Session()
 session.auth = ("user", "password")
 
-# ── Write forecast rows to PI tags ────────────────────────────────
 NITRATE_FORECAST_TAG  = "IowaRiver_IowaCity_NitrateLevel_UIDataScience_Forecast"
 BASE_URL = "https://pi-vision.facilities.uiowa.edu/piwebapi"
 PI_SERVER = "\\piserver.facilities.uiowa.edu"
@@ -264,7 +267,6 @@ forecast_4day["nitrate_forecast"] = pd.to_numeric(
     errors="coerce"
     )
 
-print(forecast_4day[["forecast_date", "nitrate_forecast"]])
 
 write_recorded_values(
 tag_name=NITRATE_FORECAST_TAG,
