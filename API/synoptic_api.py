@@ -104,7 +104,6 @@ df_weather = pull_synoptic_data(
 )
 
 print(df_weather.head())
-print(df_weather.dtypes)
 print(f"\nRows returned: {len(df_weather)}")
 
 # Optional: save to CSV
@@ -155,9 +154,6 @@ df_weather = df_weather.reset_index()
 # Flag interpolated rows and fill datetime
 df_weather["interpolated"] = df_weather["datetime"].isna() # 'datetime' column now exists
 df_weather["datetime"] = df_weather["datetime"].fillna(df_weather["date"]) # Fill original datetime (NaT) with the daily 'date'
-
-print(f"Filled {df_weather['interpolated'].sum()} missing days")
-print(df_weather[df_weather["interpolated"]])
 
 # ── Write to PI Tags ───────────────────────────────────────────────────────────────────────
 from datetime import datetime
