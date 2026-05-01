@@ -1,9 +1,13 @@
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+import json
 
-# ── Config ────────────────────────────────────────────────────────────────────
-TOKEN = "token" # Created token from Synoptic API
+# ── Load credentials from config file ────────────────────────────────────────
+with open("config.json", "r") as f:
+    config = json.load(f)
+    
+TOKEN = config["synoptic_token"] # Created token from Synoptic API
 BASE_URL = "https://api.synopticdata.com/v2/stations/timeseries"
 
 # Station ID(s) you want to pull from — comma separate multiple e.g. "STID1,STID2"
@@ -162,7 +166,7 @@ import pandas as pd
 import requests
 
 session = requests.Session()
-session.auth = ("user", "password")
+session.auth = (config["pi_username"], config["pi_password"])
 
 BASE_URL = "https://pi-vision.facilities.uiowa.edu/piwebapi"
 PI_SERVER = "\\piserver.facilities.uiowa.edu"
