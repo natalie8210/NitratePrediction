@@ -161,9 +161,14 @@ from datetime import datetime
 import os
 import pandas as pd
 import requests
+import json
+
+# ── Load credentials from config file ────────────────────────────────────────
+with open("config.json", "r") as f:
+    config = json.load(f)
 
 session = requests.Session()
-session.auth = ("user", "password")
+session.auth = (config["pi_username"], config["pi_password"])
 
 NITRATE_FORECAST_TAG  = "IowaRiver_IowaCity_NitrateLevel_UIDataScience_Forecast"
 BASE_URL = "https://pi-vision.facilities.uiowa.edu/piwebapi"
