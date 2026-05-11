@@ -195,12 +195,12 @@ def get_point_webid(tag_name):
 def build_payload(rows, time_col, value_col):
     payload = []
     for _, row in rows.iterrows():
-        ts = pd.to_datetime(row[time_col], utc=True)
+        ts = pd.to_datetime(row[time_col], utc=True).normalize()  # force to 00:00:00 UTC
         val = row[value_col]
         if pd.isna(val):
             continue
         payload.append({
-            "Timestamp": ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "Timestamp": ts.strftime("%Y-%m-%dT00:00:00Z"), 
             "Value": float(val)
         })
     return payload
