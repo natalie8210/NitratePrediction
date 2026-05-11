@@ -14,8 +14,8 @@ BASE_URL = "https://api.synopticdata.com/v2/stations/timeseries"
 STATION_ID = "COOPICYI4" # Iowa City
 
 # Date range — adjust as needed
-START_DATE = "202604081521"   # YYYYmmddHHMM in UTC
-END_DATE   = "202604301521"
+START_DATE = "202604080000"   # YYYYmmddHHMM in UTC
+END_DATE   = "202604300000"
 
 # Variables to request
 VARS = ",".join([
